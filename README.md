@@ -1,7 +1,11 @@
 # chicago-taxi-trips-dbt
 This project demonstrates end‑to‑end data engineering skills using the Chicago Taxi Trips public dataset on BigQuery.
 
-P
+This project follows the Medallion Architecture pattern. 
+The Bronze layer is represented by the raw Chicago Taxi Trips dataset already available in BigQuery’s public data, so no SQL files are needed in the repo. 
+The Silver layer contains staging and intermediate models that clean, standardize, and enrich the raw data for consistency and reusability. 
+The Gold layer holds curated mart models that answer specific business questions (e.g., top tip earners, overworkers, holiday impacts) and serve as the source for dashboards in Looker Studio.
+
 📂 chicago-taxi-trips-pipeline
 ├── 📂 models
 │   ├── 📂 bronze
