@@ -1,0 +1,43 @@
+# cloudbuild.yaml
+# Cloud Build configuration for dbt + BigQuery
+
+steps:
+  # Step 1: Use Python image to install dbt
+  - name: 'python:3.10'
+    id: 'install-dbt'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        pip install --upgrade pip
+        pip install dbt-bigquery
+
+  # Step 2: Authenticate with GCP using service account key
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk:latest'
+    id: 'auth-gcp'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        echo "$GCP_SA_KEY" > /workspace/keyfile.json
+        gcloud auth activate-service-account --key-file=/workspace/keyfile.json
+        gcloud config set project $PROJECT_ID
+
+  # Step 3: Run dbt commands
+  - name: 'python:3.10'
+    id: 'run-dbt'
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        dbt deps --profiles-dir .
+        dbt run --profiles-dir .
+        dbt test --profiles-dir .
+
+# Substitutions (environment variables passed in)
+substitutions:
+  _PROJECT_ID: "timeassgnmt-chicago-taxi-trips"
+  _GCP_SA_KEY: "timeassgnmt-chicago-taxi-trips-25c015511261.json"
+
+# Timeout for the build
+timeout: "1200s"
