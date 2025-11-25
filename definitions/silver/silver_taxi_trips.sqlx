@@ -1,0 +1,20 @@
+config {
+  type: "view",
+  schema: "silver"
+}
+
+select
+  taxi_id,
+  trip_start_timestamp,
+  trip_end_timestamp,
+  safe_cast(tips as float64) as tip_amount,
+  safe_cast(fare as float64) as fare_amount,
+  timestamp_diff(trip_end_timestamp, trip_start_timestamp, minute)/60.0 as trip_hours,
+  date(trip_start_timestamp) as trip_date,
+  payment_type,
+  company
+from `bigquery-public-data.chicago_taxi_trips.taxi_trips`
+where taxi_id is not null
+  and trip_end_timestamp >= trip_start_timestamp
+  and tips >= 0
+  and fare >= 0

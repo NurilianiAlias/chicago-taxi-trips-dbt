@@ -1,0 +1,55 @@
+
+config {
+  type: "table",
+  schema: "silver",
+  description: "Daily summary of taxi trips.",
+  columns: {
+    taxi_id: "ID of the taxi.",
+    trip_date: "Date of the trips.",
+    trips_count: "Number of trips on that day.",
+    work_hours: "Total working hours on that day.",
+    total_tips: "Total tips received on that day.",
+    total_fare: "Total fare received on that day.",
+    avg_trip_hours: "Average trip duration on that day.",
+    avg_tip_amount: "Average tip amount on that day."
+  }
+}
+
+config {
+  type: "table",
+  schema: "silver"
+}
+
+with base as (
+  select
+    taxi_id,
+    date(trip_start_timestamp) as trip_date,
+    trip_hours,
+    tip_amount,
+    fare_amount,
+    payment_type,
+    company
+  from ${ref("silver_taxi_trips")}
+),
+
+agg as (
+  select
+    taxi_id,
+    trip_date,
+    count(*) as trips,
+    sum(trip_hours) as work_hours,
+    sum(tip_amount) as total_tips,
+    sum(fare_amount) as total_fare,
+    avg(tip_amount) as avg_tip_per_trip,
+    avg(fare_amount) as avg_fare_per_trip,
+    countif(payment_type = 'Credit Card') as trips_cc,
+    countif(payment_type = 'Cash') as trips_cash
+  from base
+  group by taxi_id, trip_date
+)
+
+select
+  a.*,
+  safe_divide(trips_cc, trips) as pct_cc,
+  safe_divide(trips_cash, trips) as pct_cash
+from agg a
