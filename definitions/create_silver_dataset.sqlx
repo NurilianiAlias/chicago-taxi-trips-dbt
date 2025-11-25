@@ -1,0 +1,5 @@
+config {
+    type: "operations"
+}
+
+CREATE SCHEMA IF NOT EXISTS `timeassgnmt-chicago-taxi-trips.silver` OPTIONS(location="US")

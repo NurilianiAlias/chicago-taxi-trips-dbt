@@ -1,0 +1,47 @@
+config {
+    type: "table",
+    schema: "silver"
+}
+
+WITH
+  ordered AS (
+  SELECT
+    taxi_id,
+    trip_start_timestamp,
+    trip_end_timestamp,
+    trip_hours,
+    tip_amount,
+    fare_amount,
+    LAG(trip_end_timestamp) OVER (PARTITION BY taxi_id ORDER BY trip_start_timestamp) AS prev_end
+  FROM
+    ${ref("silver_taxi_trips")} ),
+  shift_flag AS (
+  SELECT
+    *,
+    CASE
+      WHEN prev_end IS NULL OR TIMESTAMP_DIFF(trip_start_timestamp, prev_end, hour) >= 8 THEN 1
+      ELSE 0
+  END
+    AS new_shift
+  FROM
+    ordered ),
+  shift_ided AS (
+  SELECT
+    *,
+    SUM(new_shift) OVER (PARTITION BY taxi_id ORDER BY trip_start_timestamp) AS shift_seq
+  FROM
+    shift_flag )
+SELECT
+  taxi_id,
+  shift_seq,
+  MIN(trip_start_timestamp) AS shift_start,
+  MAX(trip_end_timestamp) AS shift_end,
+  SUM(trip_hours) AS shift_work_hours,
+  COUNT(*) AS trips_in_shift,
+  SUM(tip_amount) AS shift_tip_amount,
+  SUM(fare_amount) AS shift_fare_amount
+FROM
+  shift_ided
+GROUP BY
+  taxi_id,
+  shift_seq
