@@ -1,0 +1,27 @@
+config {
+  type: "table",
+  schema: "silver",
+  name: "us_holidays"
+}
+
+SELECT DATE('2023-01-01') as holiday_date, "New Year's Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-01-16') as holiday_date, "Martin Luther King, Jr. Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-02-20') as holiday_date, "Washington's Birthday" as holiday_name
+UNION ALL
+SELECT DATE('2023-05-29') as holiday_date, "Memorial Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-06-19') as holiday_date, "Juneteenth National Independence Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-07-04') as holiday_date, "Independence Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-09-04') as holiday_date, "Labor Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-10-09') as holiday_date, "Columbus Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-11-10') as holiday_date, "Veterans Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-11-23') as holiday_date, "Thanksgiving Day" as holiday_name
+UNION ALL
+SELECT DATE('2023-12-25') as holiday_date, "Christmas Day" as holiday_name

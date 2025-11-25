@@ -1,0 +1,42 @@
+config {
+  type: "table",
+  schema: "gold",
+  description: "This table analyzes the impact of public holidays on the number of taxi trips by comparing the average number of trips on holidays versus non-holidays."
+}
+
+WITH
+  holidays AS (
+  SELECT
+    DATE(holiday_date) AS holiday_date
+  FROM
+    ${ref("us_holidays")} ),
+  daily AS (
+  SELECT
+    trip_date,
+    COUNT(*) AS trips_count
+  FROM
+    ${ref("silver_taxi_trips")}
+  GROUP BY
+    trip_date ),
+  joined AS (
+  SELECT
+    d.trip_date,
+    d.trips_count,
+    CASE
+      WHEN h.holiday_date IS NOT NULL THEN TRUE
+      ELSE FALSE
+  END
+    AS is_holiday
+  FROM
+    daily d
+  LEFT JOIN
+    holidays h
+  ON
+    d.trip_date = h.holiday_date )
+SELECT
+  is_holiday,
+  AVG(trips_count) AS avg_trips_per_day
+FROM
+  joined
+GROUP BY
+  is_holiday

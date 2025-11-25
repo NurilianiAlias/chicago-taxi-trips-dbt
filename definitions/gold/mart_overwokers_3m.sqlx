@@ -1,0 +1,35 @@
+config {
+  type: "table",
+  schema: "gold",
+  description: "Who are the top 100 overworkers, taxi IDs that work more hours than others without taking at least 8 hours break and regularly have a long shift."
+}
+
+WITH
+  shifts_with_prev_end_time AS (
+    SELECT
+      taxi_id,
+      shift_work_hours,
+      shift_start,
+      shift_end,
+      LAG(shift_end) OVER (PARTITION BY taxi_id
+        ORDER BY shift_start) AS prev_shift_end
+    FROM
+      ${ref("driver_shifts")}
+  )
+SELECT
+  taxi_id,
+  SUM(shift_work_hours) AS total_work_hours_3m,
+  COUNTIF(shift_work_hours >= 10) AS long_shifts_3m,
+  COUNTIF(TIMESTAMP_DIFF(shift_start, prev_shift_end, HOUR) < 8) AS insufficient_breaks_3m
+FROM
+  shifts_with_prev_end_time
+WHERE
+  shift_start >= TIMESTAMP(DATE_ADD((
+        SELECT
+          MAX(DATE(shift_start))
+        FROM
+          ${ref("driver_shifts")}
+      ), INTERVAL -3 MONTH))
+GROUP BY taxi_id
+ORDER BY total_work_hours_3m DESC
+LIMIT 100

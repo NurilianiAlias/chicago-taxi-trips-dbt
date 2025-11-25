@@ -1,0 +1,35 @@
+config {
+  type: "table",
+  schema: "gold",
+  name: "mart_tip_earners_3m",
+  description: "Top 100 trip earners in the last 3 months."
+}
+
+with windowed as (
+  select *
+  from ${ref("silver_taxi_trips")}
+  where trip_start_timestamp >= (SELECT TIMESTAMP(DATE_SUB(DATE(MAX(trip_start_timestamp)), INTERVAL 3 MONTH)) FROM ${ref("silver_taxi_trips")})
+),
+
+agg as (
+  select
+    taxi_id,
+    company,
+    ROUND(sum(tip_amount), 2) as total_tips_3m,
+    ROUND(sum(fare_amount),2) as total_fare_3m,
+    count(*) as trips_3m,
+    sum(trip_hours) as work_hours_3m,
+    ROUND(avg(tip_amount),2) as avg_tip_per_trip_3m
+  from windowed
+  group by taxi_id
+),
+
+ranked as (
+  select *,
+    rank() over (order by total_tips_3m desc) as tip_rank
+  from agg
+)
+
+select *
+from ranked
+where tip_rank <= 100
